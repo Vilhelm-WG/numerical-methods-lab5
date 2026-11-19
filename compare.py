@@ -1,5 +1,12 @@
 """Завдання 1.4 — порівняння результатів (відповідальний: Вільгельм)."""
-import newton, stirling, simple
+import sys
+
+import newton
+import simple
+import stirling
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 
 def main():
@@ -7,7 +14,8 @@ def main():
     for mod in (newton, stirling, simple):
         results.update(mod.solve())
 
-    print(f"{'Завдання':34s}{'f\'':>12s}{'f\'\'':>12s}")
+    d1, d2 = "f'", "f''"  # без бекслешів в f-рядках (сумісно з Python < 3.12)
+    print(f"{'Завдання':34s}{d1:>12s}{d2:>12s}")
     for name, (f1, f2) in results.items():
         print(f"{name:34s}{f1:12.4f}{f2:12.4f}")
 

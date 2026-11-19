@@ -1,76 +1,86 @@
+"""Завдання 1.1 — інтерполяційні многочлени Ньютона (відповідальна: Діана).
+
+а) x = 0.248 -> перша формула Ньютона (вперед), вузол x0, q = 0
+б) x = 2.8   -> друга формула Ньютона (назад), вузол x4
+"""
+import sys
+
 import numpy as np
 
-def solve_newton_derivatives():
-    # Вхідні дані для варіанта 3
-    x = np.array([0.248, 0.923, 1.598, 2.273, 2.948])
-    y = np.array([-3.642, 0.802, 0.841, 0.513, 0.328])
-    h = 0.675
-    n = len(y)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
-    # Побудова таблиці скінченних різниць
-    diff_table = np.zeros((n, n))
-    diff_table[:, 0] = y
+X = np.array([0.248, 0.923, 1.598, 2.273, 2.948])
+Y = np.array([-3.642, 0.802, 0.841, 0.513, 0.328])
+H = 0.675
+
+
+def build_diff_table():
+    """diff_table[i, j] = Δ^j y_i."""
+    n = len(Y)
+    table = np.zeros((n, n))
+    table[:, 0] = Y
     for j in range(1, n):
         for i in range(n - j):
-            diff_table[i, j] = diff_table[i+1, j-1] - diff_table[i, j-1]
+            table[i, j] = table[i + 1, j - 1] - table[i, j - 1]
+    return table
 
-    print("=== ПУНКТ 1.1 а) Точка x = 0.248 (Перша формула Ньютона — вперед) ===")
-    x_a = 0.248
-    x0 = x[0]
-    q_a = (x_a - x0) / h  # дорівнює 0, оскільки збігається з першим вузлом
 
-    # Різниці з першого рядка таблиці
-    Dy0   = diff_table[0, 1]
-    D2y0  = diff_table[0, 2]
-    D3y0  = diff_table[0, 3]
-    D4y0  = diff_table[0, 4]
-
-    # Формули для першої та другої похідних (вперед)
-    f_prime_a = (1 / h) * (
-        Dy0 +
-        ((2 * q_a - 1) / 2) * D2y0 +
-        ((3 * q_a**2 - 6 * q_a + 2) / 6) * D3y0 +
-        ((4 * q_a**3 - 18 * q_a**2 + 22 * q_a - 6) / 24) * D4y0
+def newton_forward(x):
+    """f'(x), f''(x) за першою формулою Ньютона (вузол x0)."""
+    t = build_diff_table()
+    q = (x - X[0]) / H
+    dy, d2y, d3y, d4y = t[0, 1], t[0, 2], t[0, 3], t[0, 4]
+    f1 = (1 / H) * (
+        dy
+        + ((2 * q - 1) / 2) * d2y
+        + ((3 * q**2 - 6 * q + 2) / 6) * d3y
+        + ((4 * q**3 - 18 * q**2 + 22 * q - 6) / 24) * d4y
     )
-
-    f_double_prime_a = (1 / h**2) * (
-        D2y0 +
-        (q_a - 1) * D3y0 +
-        ((6 * q_a**2 - 18 * q_a + 11) / 12) * D4y0
+    f2 = (1 / H**2) * (
+        d2y
+        + (q - 1) * d3y
+        + ((6 * q**2 - 18 * q + 11) / 12) * d4y
     )
+    return float(f1), float(f2)
 
-    print(f"q = {q_a}")
-    print(f"f'(0.248)  = {f_prime_a:.4f}")
-    print(f"f''(0.248) = {f_double_prime_a:.4f}\n")
 
-    print("=== ПУНКТ 1.1 б) Точка x = 2.8 (Друга формула Ньютона — назад) ===")
-    x_b = 2.8
-    x_last = x[-1]  # x4 = 2.948
-    q_b = (x_b - x_last) / h
-
-    # Різниці з кінця таблиці
-    Dy_last   = diff_table[3, 1]
-    D2y_last2 = diff_table[2, 2]
-    D3y_last3 = diff_table[1, 3]
-    D4y_last4 = diff_table[0, 4]
-
-    # Формули для першої та другої похідних (назад)
-    f_prime_b = (1 / h) * (
-        Dy_last +
-        ((2 * q_b + 1) / 2) * D2y_last2 +
-        ((3 * q_b**2 + 6 * q_b + 2) / 6) * D3y_last3 +
-        ((4 * q_b**3 + 18 * q_b**2 + 22 * q_b + 6) / 24) * D4y_last4
+def newton_backward(x):
+    """f'(x), f''(x) за другою формулою Ньютона (вузол x4)."""
+    t = build_diff_table()
+    q = (x - X[-1]) / H
+    dy, d2y, d3y, d4y = t[3, 1], t[2, 2], t[1, 3], t[0, 4]
+    f1 = (1 / H) * (
+        dy
+        + ((2 * q + 1) / 2) * d2y
+        + ((3 * q**2 + 6 * q + 2) / 6) * d3y
+        + ((4 * q**3 + 18 * q**2 + 22 * q + 6) / 24) * d4y
     )
-
-    f_double_prime_b = (1 / h**2) * (
-        D2y_last2 +
-        (q_b + 1) * D3y_last3 +
-        ((6 * q_b**2 + 18 * q_b + 11) / 12) * D4y_last4
+    f2 = (1 / H**2) * (
+        d2y
+        + (q + 1) * d3y
+        + ((6 * q**2 + 18 * q + 11) / 12) * d4y
     )
+    return float(f1), float(f2)
 
-    print(f"q = {q_b:.5f}")
-    print(f"f'(2.8)  = {f_prime_b:.4f}")
-    print(f"f''(2.8) = {f_double_prime_b:.4f}")
+
+def solve():
+    """Єдиний інтерфейс для compare.py: {назва: (f', f'')}."""
+    return {
+        "1.1а f'(0.248), f''(0.248)": newton_forward(0.248),
+        "1.1б f'(2.8), f''(2.8)": newton_backward(2.8),
+    }
+
 
 if __name__ == "__main__":
-    solve_newton_derivatives()
+    print("=== ПУНКТ 1.1 а) x = 0.248 (перша формула Ньютона - вперед) ===")
+    print(f"q = {(0.248 - X[0]) / H:g}")
+    f1, f2 = newton_forward(0.248)
+    print(f"f'(0.248)  = {f1:.4f}")
+    print(f"f''(0.248) = {f2:.4f}\n")
+
+    print("=== ПУНКТ 1.1 б) x = 2.8 (друга формула Ньютона - назад) ===")
+    print(f"q = {(2.8 - X[-1]) / H:.5f}")
+    f1, f2 = newton_backward(2.8)
+    print(f"f'(2.8)  = {f1:.4f}")
+    print(f"f''(2.8) = {f2:.4f}")
