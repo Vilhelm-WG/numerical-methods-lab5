@@ -1,37 +1,53 @@
-"""Задача 2.1 а) і 2.2 — формула прямокутників (відповідальна: Діана).
-Основна: середніх прямокутників (порядок k = 2). Додатково: лівих (k = 1).
-"""
-from data2 import A, B, f, runge, d1, d2, max_abs
+from data2 import A, B, d1, d2, f, max_abs, runge
 
 
-def rect_mid(n):
-    h = (B - A) / n
-    return h * sum(f(A + (i + 0.5) * h) for i in range(n))
+def rect_mid(n: int, a: float = A, b: float = B) -> float:
+    """Формула середніх прямокутників при розбитті [a, b] на n частин."""
+    h = (b - a) / n
+    total = sum(f(a + (i + 0.5) * h) for i in range(n))
+    return h * total
 
 
-def rect_left(n):
-    h = (B - A) / n
-    return h * sum(f(A + i * h) for i in range(n))
+def rect_left(n: int, a: float = A, b: float = B) -> float:
+    """Формула лівих прямокутників при розбитті [a, b] на n частин."""
+    h = (b - a) / n
+    total = sum(f(a + i * h) for i in range(n))
+    return h * total
 
 
-def a_priori(n=5):
-    """Апріорні оцінки похибки при розбитті на n частин."""
-    m2, m1 = max_abs(d2), max_abs(d1)
-    mid = (B - A)**3 * m2 / (24 * n**2)    # середніх прямокутників
-    left = (B - A)**2 * m1 / (2 * n)       # лівих прямокутників
-    return mid, left, m2, m1
+def a_priori(n: int = 5, a: float = A, b: float = B):
+    """Апріорна оцінка похибки при розбитті на n рівних частин."""
+    m2 = max_abs(d2)
+    m1 = max_abs(d1)
+    mid_err = ((b - a) ** 3) * m2 / (24 * (n ** 2))
+    left_err = ((b - a) ** 2) * m1 / (2 * n)
+    return mid_err, left_err, m2, m1
 
 
-def solve():
-    n, val, err = runge(rect_mid, 2, 1e-2, verbose=False)
-    return {"2.1а прямокутники (середніх), eps=1e-2": (n, val, err)}
+def solve(eps: float = 1e-2):
+    """Запуск обчислень за правилом Рунге для порівняльного скрипта."""
+    print("=== 2.1 а) Середні прямокутники (k=2, правило Рунге) ===")
+    n_mid, val_mid, err_mid = runge(lambda n: rect_mid(n), k=2, eps=eps, n0=2, verbose=True)
+
+    return {
+        "Прямокутники (середні)": (n_mid, val_mid, err_mid),
+    }
+
+
+def main():
+    results = solve(eps=1e-2)
+    n_mid, val_mid, err_mid = results["Прямокутники (середні)"]
+    print(f"\nПідсумок 2.1 а) (середні): n={n_mid}, I={val_mid:.5f}, оцінка={err_mid:.2e}")
+
+    print("\n=== Додатково: Ліві прямокутники (k=1, правило Рунге) ===")
+    n_left, val_left, err_left = runge(lambda n: rect_left(n), k=1, eps=1e-2, n0=2, verbose=True)
+    print(f"Підсумок (ліві): n={n_left}, I={val_left:.5f}, оцінка={err_left:.2e}")
+
+    print("\n=== 2.2 Апріорна оцінка похибки (n = 5) ===")
+    mid_err, left_err, m2, m1 = a_priori(n=5)
+    print(f"Середні прямокутники: M2={m2:.6f}, |R| <= {mid_err:.2e} ({mid_err:.5f})")
+    print(f"Ліві прямокутники:    M1={m1:.6f}, |R| <= {left_err:.2e} ({left_err:.5f})")
 
 
 if __name__ == "__main__":
-    print("2.1 а) середні прямокутники, eps = 1e-2")
-    runge(rect_mid, 2, 1e-2)
-    print("\nДодатково: ліві прямокутники (k = 1), eps = 1e-2")
-    runge(rect_left, 1, 1e-2)
-    mid, left, m2, m1 = a_priori(5)
-    print(f"\n2.2 n = 5: M2 = {m2:.4f} -> |R| <= (b-a)^3*M2/(24 n^2) = {mid:.5f}")
-    print(f"          (ліві) M1 = {m1:.4f} -> |R| <= (b-a)^2*M1/(2n) = {left:.5f}")
+    main()
